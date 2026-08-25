@@ -1,5 +1,5 @@
 [Unit]
-Description=git pull do vault de docs (SplitPHP)
+Description=git pull of the SplitPHP docs vault
 After=network-online.target
 Wants=network-online.target
 [Service]

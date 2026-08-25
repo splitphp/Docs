@@ -1,34 +1,34 @@
-# SplitPHP — Documentação oficial
+# SplitPHP — Official Documentation
 
-Documentação oficial do framework **SplitPHP**, versionada como um vault Obsidian e servida ao mundo,
-read-only, por um servidor **MCP** (Model Context Protocol) — para que qualquer assistente de IA (e o
-dev-bot da Lambda TT) possa buscar e ler a doc semanticamente.
+Official documentation for the **SplitPHP** framework, versioned as an Obsidian vault and served to the
+world, read-only, through an **MCP** (Model Context Protocol) server — so any AI assistant (and Lambda
+TT's dev-bot) can search and read the docs semantically.
 
-- **MCP público:** `https://mcp.splitphp.org/mcp` (read-only, sem auth para o público).
-- Futuro: uma **REST API** (`api.splitphp.org`) + um **SPA** de docs no apex `splitphp.org` renderizando
-  o Markdown.
+- **Public MCP:** `https://mcp.splitphp.org/mcp` (read-only, no auth for the public).
+- Future: a **REST API** (`api.splitphp.org`) plus a docs **SPA** at the apex `splitphp.org` rendering
+  the Markdown.
 
-## Estrutura do repo
+## Repository layout
 
 ```
 .
-├── vault/     # o conteúdo da doc (vault Obsidian: .md em pastas numeradas 001-…/014-…)
-└── infra/     # como servir o vault como MCP público (Caddy + Obsidian headless + systemd) — ver infra/README.md
+├── vault/     # the documentation content (Obsidian vault: .md in numbered folders 001-…/014-…)
+└── infra/     # how the vault is served as a public MCP (Caddy + headless Obsidian + systemd) — see infra/README.md
 ```
 
-- **`vault/`** é a fonte de verdade da documentação. Edite os `.md` aqui e faça `push`.
-- A EC2 de produção faz `git pull` deste repo a cada 15 min e re-indexa automaticamente — ou seja,
-  **o que entra em `vault/` no `master` vira doc publicada** em poucos minutos.
-- `.obsidian/` (config local do Obsidian, incl. a chave do servidor) é **gitignored** — não versione.
+- **`vault/`** is the source of truth for the docs. Edit the `.md` here and push.
+- The production EC2 runs `git pull` on this repo every 15 min and re-indexes automatically — i.e.,
+  **whatever lands in `vault/` on `master` becomes published docs** within a few minutes.
+- `.obsidian/` (local Obsidian config, incl. the server key) is **gitignored** — do not commit it.
 
-## Contribuindo com a doc
+## Contributing to the docs
 
-1. Edite/adicione `.md` em `vault/` (mantendo o padrão de pastas numeradas).
-2. `git commit` + `git push` no `master`.
-3. Em até ~15 min a EC2 puxa e a doc fica disponível via MCP (e, no futuro, no site).
+1. Edit/add `.md` files under `vault/` (keeping the numbered-folder convention).
+2. `git commit` + `git push` to `master`.
+3. Within ~15 min the EC2 pulls and the docs become available over MCP (and, later, on the site).
 
-## Servindo (infra)
+## Serving (infra)
 
-Todo o provisionamento do servidor está em [`infra/`](infra/README.md) — reprodutível do zero com
-`infra/scripts/provision.sh` numa EC2 Ubuntu 24.04 arm64. Detalhes de arquitetura, requisitos (DNS/SG) e
-segredos: ver [infra/README.md](infra/README.md).
+All server provisioning lives in [`infra/`](infra/README.md) — reproducible from scratch with
+`infra/scripts/provision.sh` on an Ubuntu 24.04 arm64 EC2. Architecture, requirements (DNS/SG) and
+secrets: see [infra/README.md](infra/README.md).

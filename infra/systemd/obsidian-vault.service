@@ -1,5 +1,5 @@
 [Unit]
-Description=Obsidian headless (vault SplitPHP docs + semantic-vault-mcp)
+Description=Obsidian headless (SplitPHP docs vault + semantic-vault-mcp)
 After=network-online.target xvfb.service
 Requires=xvfb.service
 Wants=network-online.target

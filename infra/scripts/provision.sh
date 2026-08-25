@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
-# Provisiona a EC2 que serve esta documentação como MCP público read-only em mcp.splitphp.org.
-# Reproduz o setup: Obsidian headless (xvfb) + plugin semantic-vault-mcp (readOnlyMode) atrás de
-# Caddy (Let's Encrypt), com git pull do vault a cada 15min.
+# Provisions the EC2 that serves this documentation as a public read-only MCP at mcp.splitphp.org.
+# Reproduces the setup: headless Obsidian (xvfb) + semantic-vault-mcp plugin (readOnlyMode) behind
+# Caddy (Let's Encrypt), with a git pull of the vault every 15 min.
 #
-# Alvo: Ubuntu 24.04 **arm64** (ex.: t4g.nano). Rodar como usuário `ubuntu`.
-# Pré-requisitos (fora deste script): SG com 80/443 abertos ao mundo + 22 restrito ao seu IP;
-# DNS A `mcp.splitphp.org` → IP público (Elastic IP) da instância.
+# Target: Ubuntu 24.04 **arm64** (e.g. t4g.nano). Run as the `ubuntu` user.
+# Prerequisites (outside this script): a Security Group with 80/443 open to the world + 22 restricted to
+# your IP; a DNS A record `mcp.splitphp.org` → the instance's public (Elastic) IP.
 #
-# Uso:  git clone https://github.com/splitphp/Docs.git ~/vault && bash ~/vault/infra/scripts/provision.sh
+# Usage:  git clone https://github.com/splitphp/Docs.git ~/vault && bash ~/vault/infra/scripts/provision.sh
 set -euo pipefail
 
-HERE="$(cd "$(dirname "$0")/.." && pwd)"        # dir infra/
+HERE="$(cd "$(dirname "$0")/.." && pwd)"        # the infra/ dir
 REPO_URL="https://github.com/splitphp/Docs.git"
-CLONE="$HOME/vault"; VAULT="$CLONE/vault"        # o vault do Obsidian é o subfolder vault/
+CLONE="$HOME/vault"; VAULT="$CLONE/vault"        # the Obsidian vault is the vault/ subfolder
 DOMAIN="mcp.splitphp.org"
 OBS_VER="${OBS_VER:-1.13.7}"
 PLUGIN_DIR="$VAULT/.obsidian/plugins/semantic-vault-mcp"
 
-echo "== 1/10 swapfile 2GB (t4g.nano tem ~408MB) =="
+echo "== 1/10 2GB swapfile (t4g.nano has only ~408MB) =="
 if ! sudo swapon --show | grep -q /swapfile; then
   sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
   grep -q /swapfile /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab >/dev/null
@@ -38,33 +38,33 @@ if [ ! -x /usr/local/bin/obsidian ]; then
   sudo ln -sf "$(sudo find /opt/obsidian -maxdepth 2 -type f -name obsidian | head -1)" /usr/local/bin/obsidian
 fi
 
-echo "== 4/10 Caddy arm64 + módulo rate_limit → /usr/local/bin/caddy =="
+echo "== 4/10 Caddy arm64 with the rate_limit module → /usr/local/bin/caddy =="
 if [ ! -x /usr/local/bin/caddy ]; then
   curl -fL --retry 3 -o /tmp/caddy "https://caddyserver.com/api/download?os=linux&arch=arm64&p=github.com/mholt/caddy-ratelimit"
   sudo mv /tmp/caddy /usr/local/bin/caddy && sudo chmod +x /usr/local/bin/caddy
 fi
 
-echo "== 5/10 clone do vault (temp + swap atômico — NUNCA rm antes de um clone) =="
+echo "== 5/10 clone the vault (temp + atomic swap — NEVER rm before a clone) =="
 if [ ! -d "$CLONE/.git" ]; then
   rm -rf "$HOME/vault.new"
   git clone --depth 1 "$REPO_URL" "$HOME/vault.new"
-  [ "$(find "$HOME/vault.new/vault" -name '*.md' 2>/dev/null | wc -l)" -ge 1 ] || { echo "FATAL: vault/ vazio no clone"; exit 1; }
+  [ "$(find "$HOME/vault.new/vault" -name '*.md' 2>/dev/null | wc -l)" -ge 1 ] || { echo "FATAL: vault/ empty in the clone"; exit 1; }
   [ -e "$CLONE" ] && mv "$CLONE" "$HOME/vault.old.$$"
   mv "$HOME/vault.new" "$CLONE"
   rm -rf "$HOME/vault.old.$$" 2>/dev/null || true
-  HERE="$CLONE/infra"   # a partir daqui o infra/ vive dentro do clone
+  HERE="$CLONE/infra"   # from here on, infra/ lives inside the clone
 fi
 
-echo "== 6/10 plugin semantic-vault-mcp + skeleton .obsidian =="
-# O plugin (main.js/manifest.json/styles.css) é third-party e NÃO é versionado aqui. Obtenha em
-# https://github.com/aaronsb/semantic-vault-mcp (ou copie de um Obsidian que já o tenha) e coloque em
-# infra/obsidian-skeleton/plugins/semantic-vault-mcp/ antes de rodar, OU copie manualmente pro PLUGIN_DIR.
+echo "== 6/10 semantic-vault-mcp plugin + .obsidian skeleton =="
+# The plugin (main.js/manifest.json/styles.css) is third-party and NOT versioned here. Get it from
+# https://github.com/aaronsb/semantic-vault-mcp (or copy from an existing Obsidian install) and place it
+# under infra/obsidian-skeleton/plugins/semantic-vault-mcp/ before running, OR copy it into PLUGIN_DIR by hand.
 mkdir -p "$PLUGIN_DIR"
 cp "$HERE"/obsidian-skeleton/*.json "$VAULT/.obsidian/" 2>/dev/null || true
 if [ -f "$HERE/obsidian-skeleton/plugins/semantic-vault-mcp/main.js" ]; then
   cp "$HERE"/obsidian-skeleton/plugins/semantic-vault-mcp/* "$PLUGIN_DIR/"
 elif [ ! -f "$PLUGIN_DIR/main.js" ]; then
-  echo "AVISO: plugin semantic-vault-mcp ausente — ponha main.js/manifest.json/styles.css em $PLUGIN_DIR"
+  echo "WARNING: semantic-vault-mcp plugin missing — put main.js/manifest.json/styles.css in $PLUGIN_DIR"
 fi
 
 echo "== 7/10 apiKey + data.json (readOnlyMode, loopback) =="
@@ -87,7 +87,7 @@ json.dump({
 }, open(sys.argv[1], "w"), ensure_ascii=False, indent=2)
 PY
 
-echo "== 8/10 registra o vault no perfil do Obsidian =="
+echo "== 8/10 register the vault in the Obsidian profile =="
 mkdir -p "$HOME/.config/obsidian"
 VAULT="$VAULT" python3 - <<'PY'
 import json, os, hashlib
@@ -104,11 +104,11 @@ sudo cp "$HERE/Caddyfile" /etc/caddy/Caddyfile
 printf 'MCP_KEY=%s\n' "$(sudo cat /etc/mcp.key)" | sudo tee /etc/caddy/mcp.env >/dev/null
 sudo chmod 600 /etc/caddy/mcp.env
 
-echo "== 10/10 units systemd =="
+echo "== 10/10 systemd units =="
 sudo cp "$HERE"/systemd/*.service "$HERE"/systemd/*.timer /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now xvfb.service obsidian-vault.service caddy.service vault-pull.timer
 
 echo
-echo "OK. Verifique (após DNS/SG prontos + emissão do cert):"
-echo "  curl -s -o /dev/null -w '%{http_code}\\n' https://$DOMAIN/mcp   # espera 400"
+echo "Done. Verify (after DNS/SG are ready and the cert is issued):"
+echo "  curl -s -o /dev/null -w '%{http_code}\\n' https://$DOMAIN/mcp   # expect 400"

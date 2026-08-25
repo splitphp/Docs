@@ -1,7 +1,7 @@
-# Config local do Obsidian — inclui o data.json do semantic-vault-mcp com a apiKey
-# do servidor. É criada/semeada por instância (readOnlyMode, loopback, chave). NUNCA
-# versionar: o repo é público e o pull não deve clobberar a config do servidor.
+# Local Obsidian config — holds the semantic-vault-mcp data.json with the server's
+# apiKey (seeded per instance: readOnlyMode, loopback, key). NEVER commit it: this repo
+# is public and a pull must not clobber the server's config.
 .obsidian/
 
-# Lixeira do Obsidian
+# Obsidian trash
 .trash/
