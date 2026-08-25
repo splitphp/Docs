@@ -1,12 +1,15 @@
 # SplitPHP — Official Documentation
 
 Official documentation for the **SplitPHP** framework, versioned as an Obsidian vault and served to the
-world, read-only, through an **MCP** (Model Context Protocol) server — so any AI assistant (and Lambda
-TT's dev-bot) can search and read the docs semantically.
+world, read-only, so any AI assistant (and Lambda TT's dev-bot) can search/read the docs semantically and
+a browser docs site can render them.
 
-- **Public MCP:** `https://mcp.splitphp.org/mcp` (read-only, no auth for the public).
-- Future: a **REST API** (`api.splitphp.org`) plus a docs **SPA** at the apex `splitphp.org` rendering
-  the Markdown.
+- **Public MCP:** `https://mcp.splitphp.org/mcp` (semantic search/read, no auth for the public).
+- **Public REST:** `https://api.splitphp.org/vault/*` (`GET` file content + folder listings only; no auth
+  for the public; CORS limited to the docs site). Both services run on the same instance — see
+  [infra/README.md](infra/README.md).
+- Future: a docs **SPA** at the apex `splitphp.org` that renders the Markdown — built in its **own
+  separate repository/project** (it consumes the REST API above; it is not part of this repo).
 
 ## Repository layout
 

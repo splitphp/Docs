@@ -2,12 +2,65 @@
 	order rate_limit before reverse_proxy
 }
 
+# Public read-only MCP (semantic-vault-mcp). The public hits Caddy with no auth; Caddy injects the
+# internal key and proxies to the loopback plugin. Writes are blocked server-side (readOnlyMode).
 mcp.splitphp.org {
 	rate_limit {
-		zone mcp { key {remote_host}; events 60; window 1m }   # protect the public endpoint
+		zone mcp {
+			key {remote_host}
+			events 60
+			window 1m
+		}
 	}
-	reverse_proxy localhost:3001 {
-		header_up Authorization "Bearer {$MCP_KEY}"    # inject the internal key; the public sends no token
-		flush_interval -1                              # MCP uses SSE/streaming
+	reverse_proxy 127.0.0.1:3001 {
+		header_up Authorization "Bearer {$MCP_KEY}"
+		flush_interval -1
+	}
+}
+
+# Public read-only REST API (Local REST API plugin). The plugin itself is write-capable, so Caddy
+# exposes ONLY `GET /vault/*` (file content + folder listings) and returns 403 for anything else.
+# The public sends no token; Caddy injects the internal key. CORS is limited to the docs SPA origin.
+api.splitphp.org {
+	# A `route` runs its directives in written order, so rate_limit applies BEFORE the handle routes
+	# terminate the request (site-level directive ordering would let `handle` skip it otherwise).
+	route {
+		rate_limit {
+			zone api {
+				key {remote_host}
+				events 60
+				window 1m
+			}
+		}
+
+		# CORS preflight for the docs SPA (public, read-only)
+		@preflight method OPTIONS
+		handle @preflight {
+			header Access-Control-Allow-Origin "https://splitphp.org"
+			header Access-Control-Allow-Methods "GET, OPTIONS"
+			header Access-Control-Allow-Headers "Content-Type"
+			header Access-Control-Max-Age "86400"
+			respond 204
+		}
+
+		# Allowlist: only GET /vault/* reaches the plugin
+		@readonly {
+			method GET
+			path /vault/*
+		}
+		handle @readonly {
+			reverse_proxy 127.0.0.1:27123 {
+				header_up Authorization "Bearer {$REST_KEY}"
+				# The plugin injects its own `Access-Control-Allow-Origin: *`; override it (`>` replaces)
+				# so the response carries a single, restricted CORS origin.
+				header_down >Access-Control-Allow-Origin "https://splitphp.org"
+				flush_interval -1
+			}
+		}
+
+		# Everything else (non-GET, or any path outside /vault/*) is denied
+		handle {
+			respond "Forbidden: this API exposes only GET /vault/*" 403
+		}
 	}
 }
