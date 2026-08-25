@@ -61,7 +61,7 @@ use SplitPHP\Utils;
 
 Utils::escapeHTML($formData);                        // sanitizes against XSS (recursive on arrays/objects)
 Utils::isJson($string);                              // bool
-Utils::stringToSlug("Título com Acentuação!");        // "titulo_com_acentuacao"
+Utils::stringToSlug("Título com Acentuação!");        // "titulo-com-acentuacao"
 Utils::stringToPascalCase("meu-nome-de-classe");      // "MeuNomeDeClasse"
 Utils::regexTest('/^\d+$/', $value);                  // boolean wrapper around preg_match
 Utils::dataEncrypt($data, $key);                      // reversible encryption
