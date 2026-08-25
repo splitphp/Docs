@@ -1,0 +1,8 @@
+[Unit]
+Description=git pull do vault de docs (SplitPHP)
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/usr/bin/git -C /home/ubuntu/vault pull --ff-only

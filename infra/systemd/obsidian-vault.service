@@ -1,0 +1,15 @@
+[Unit]
+Description=Obsidian headless (vault SplitPHP docs + semantic-vault-mcp)
+After=network-online.target xvfb.service
+Requires=xvfb.service
+Wants=network-online.target
+[Service]
+Type=simple
+User=ubuntu
+Environment=HOME=/home/ubuntu
+Environment=DISPLAY=:99
+ExecStart=/home/ubuntu/obsidian-run.sh
+Restart=always
+RestartSec=5
+[Install]
+WantedBy=multi-user.target

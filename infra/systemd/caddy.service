@@ -1,0 +1,14 @@
+[Unit]
+Description=Caddy (mcp.splitphp.org reverse proxy)
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=notify
+User=root
+EnvironmentFile=/etc/caddy/mcp.env
+ExecStart=/usr/local/bin/caddy run --config /etc/caddy/Caddyfile
+ExecReload=/usr/local/bin/caddy reload --config /etc/caddy/Caddyfile --force
+Restart=on-failure
+LimitNOFILE=1048576
+[Install]
+WantedBy=multi-user.target
