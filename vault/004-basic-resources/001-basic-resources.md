@@ -8,5 +8,6 @@
 2. [[003-web_service|Web Service]]
 3. [[004-dao|DAO]]
 4. [[005-migrations|Migrations]]
+5. [[006-seeds|Seeds]]
 
 ---

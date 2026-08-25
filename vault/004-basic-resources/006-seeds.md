@@ -93,6 +93,6 @@ php console seeds:help        # detailed help
 ##### Related Links
 
 - See [[005-migrations|Migrations]] for table/column definitions.
-- See [[001-database-and-connections|Database & Connections]] for stored procedures and advanced DAO features.
+- See [[001-database-and-connections|Database & Connections]] for database connector helpers.
 
 ---

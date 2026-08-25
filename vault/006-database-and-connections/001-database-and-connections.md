@@ -74,71 +74,10 @@ $cred->export();    // associative array with the 4 fields, ready to pass along
 
 ---
 
-##### Stored Procedures in Migrations
-
- Besides `Table()`, a *Migration* can also declare **procedures** via `ProcedureBlueprint` (class `SplitPHP\DbManager\Blueprints\ProcedureBlueprint`), something not mentioned in the [[005-migrations|Migrations]] tutorial:
-
-```php
-<?php
-namespace YourApp\Migrations;
-
-use SplitPHP\DbManager\Migration;
-
-class CreateCalcTotalProcedure extends Migration {
-  public function apply(){
-    $this->Procedure('calc_total')
-      ->withArg('id_order', 'INT')
-      ->outputs('total', 'DECIMAL(10,2)')
-      ->setInstructions("SELECT SUM(price) INTO total FROM order_items WHERE id_order = id_order;");
-  }
-}
-```
-
-- `withArg(string $name, string $type)`: adds an input argument.
-- `outputs(string $name, string $type)`: defines the procedure's output parameter.
-- `setInstructions(string $instructions)`: the procedure's SQL body.
-- `drop()`: (inherited from `Blueprint`) marks the procedure to be dropped instead of created.
-
-  NOTE Just like `Table()`, calling `$this->Procedure('name')` again in a future migration **alters** the existing procedure (it gets recreated with the new definition).
-
- Once created, a procedure becomes accessible directly through the **DAO**, via a "magic method" mechanism: any call to a DAO method whose name matches an existing procedure in the database invokes it automatically, with no extra declaration needed:
-
-```php
-<?php
-// Calls the "calc_total" stored procedure, passing id_order as an argument:
-$dao = $this->getDao()->calc_total(['id_order' => 42]);
-
-// Retrieves the result (set by reference):
-$dao->outputProcResult($result);
-```
-
----
-
-##### DAO — advanced methods (not covered in the basic tutorial)
-
- The [[004-dao|DAO]] tutorial covers `filter()`, the comparison operators, `and()`/`or()`, `find()`/`first()`/`fetch()` and `insert()`/`update()`/`delete()`. The methods below exist on the same class and are not documented anywhere else:
-
-- **`bindParams(array $params, ?string $placeholder = null)`**: an alternative to `filter()` for parameterizing a raw SQL query (passed to `find()`), replacing `?name?` placeholders directly in the SQL text instead of building `WHERE` clauses. Useful when the query already has conditional logic too complex for the filter builder.
-
-  ```php
-  <?php
-  $results = $this->getDao('PEOPLE')
-    ->bindParams(['minAge' => 18])
-    ->find("SELECT * FROM PEOPLE WHERE age >= ?minAge?");
-  ```
-
-- **`getFilters()`**: returns the array of filters accumulated so far in the current operation (useful for debugging or for composing more complex queries).
-- **`static dbCommitChanges()`**: forces a manual commit of the current transaction (when `DB_TRANSACTIONAL` is on) and immediately opens a new one — for long-running operations that need to "save" partial checkpoints.
-- **`static clearPersistence()`**: clears the `SELECT` result cache the DAO keeps internally (the DAO caches the result of a given query within the same execution, to avoid re-querying).
-- **`static flush()`**: shortcut that calls `dbCommitChanges()` followed by `clearPersistence()`.
-- **`insert()`/`update()`/`delete()` with `$debug = true`**: any of these operations, when called with the second parameter (or only parameter, in the case of `delete`) set to `true`, does **not** execute the operation — it returns the `Sqlobj` object with the SQL that would have run, useful for debugging without touching the database.
-
----
-
 ##### Related Links
 
-- See [[004-dao|DAO]] for basic DAO usage.
-- See [[005-migrations|Migrations]] for `Table()`, columns, indexes and foreign keys.
+- See [[004-dao|DAO]] for Data Access usage.
+- See [[005-migrations|Migrations]] for `Table()`, columns, indexes, foreign keys and Stored Procedures.
 - See [[006-seeds|Seeds]] for using `Seed()` inside a `Table` (test data).
 
 ---

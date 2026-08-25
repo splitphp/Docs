@@ -198,4 +198,38 @@ php console migrations:status
 php console migrations:help
 ```
 
----
+##### Stored Procedures
+Besides `Table()`, a *Migration* can also declare **procedures** via `ProcedureBlueprint` (class `SplitPHP\DbManager\Blueprints\ProcedureBlueprint`):
+```php
+<?php
+namespace YourApp\Migrations;
+
+use SplitPHP\DbManager\Migration;
+
+class CreateCalcTotalProcedure extends Migration {
+  public function apply(){
+    $this->Procedure('calc_total')
+      ->withArg('id_order', 'INT')
+      ->outputs('total', 'DECIMAL(10,2)')
+      ->setInstructions("SELECT SUM(price) INTO total FROM order_items WHERE id_order = id_order;");
+  }
+}
+```
+
+- `withArg(string $name, string $type)`: adds an input argument.
+- `outputs(string $name, string $type)`: defines the procedure's output parameter.
+- `setInstructions(string $instructions)`: the procedure's SQL body.
+- `drop()`: (inherited from `Blueprint`) marks the procedure to be dropped instead of created.
+
+> **NOTE:** Just like `Table()`, calling `$this->Procedure('name')` again in a future migration **alters** the existing procedure (it gets recreated with the new definition).
+
+ Once created, a procedure becomes accessible directly through the **DAO**, via a "magic method" mechanism: any call to a DAO method whose name matches an existing procedure in the database invokes it automatically, with no extra declaration needed:
+
+```php
+<?php
+// Calls the "calc_total" stored procedure, passing id_order as an argument:
+$dao = $this->getDao()->calc_total(['id_order' => 42]);
+
+// Retrieves the result (set by reference):
+$dao->outputProcResult($result);
+```
